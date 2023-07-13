@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model producto {
+  id                 Int           @id @default(autoincrement())
+  nombre             String        @db.VarChar(20)
+  stock              Int           @default(0)
+  precio             Decimal       @db.Decimal(12, 2)
+  categoria          String?       @db.VarChar(20)
+  fechaActualizacion DateTime?     @updatedAt @map("fecha_actualizacion") @db.Timestamp(0)
+  lineasCompra       lineaCompra[]
+  LineasVenta        lineaVenta[]
+
+  @@map("productos")
+}
+
+model compra {
+  id        Int           @id @default(autoincrement())
+  fecha     DateTime      @db.Timestamp(0)
+  proveedor String?       @db.VarChar(50)
+  lineas    lineaCompra[]
+
+  @@map("compras")
+}
+
+model lineaCompra {
+  idCompra       Int      @map("id_compra")
+  linea          Int
+  idProducto     Int      @map("id_producto")
+  cantidad       Int
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(12, 2)
+  compra         compra   @relation(fields: [idCompra], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  producto       producto @relation(fields: [idProducto], references: [id])
+
+  @@id([linea, idCompra])
+  @@map("linea_compras")
+}
+
+model venta {
+  id      Int          @id @default(autoincrement())
+  fecha   DateTime     @db.Timestamp(0)
+  cliente String?      @db.VarChar(50)
+  lineas  lineaVenta[]
+
+  @@map("ventas")
+}
+
+model lineaVenta {
+  idVenta        Int      @map("id_venta")
+  linea          Int
+  idProducto     Int      @map("id_producto")
+  cantidad       Int
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(12, 2)
+  venta          venta    @relation(fields: [idVenta], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  producto       producto @relation(fields: [idProducto], references: [id])
+
+  @@id([linea, idVenta])
+  @@map("linea_ventas")
+}
